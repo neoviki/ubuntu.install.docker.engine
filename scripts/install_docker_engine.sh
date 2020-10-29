@@ -35,12 +35,19 @@ sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 #sudo apt-get install docker-ce=<VERSION_STRING> docker-ce-cli=<VERSION_STRING> containerd.io
 #<VERSION_STRING> looks like this -> 5:18.09.1~3-0~ubuntu-xenial.
 
+sudo groupadd docker
 sudo usermod -aG docker $USER
+newgrp docker 
 
-sudo systemctl restart docker
+#sudo systemctl restart docker
+sudo systemctl stop docker.service
+sudo systemctl start docker.service
+sudo systemctl enable docker.service
+
 
 #sudo chmod 666 /var/run/docker.sock
 #sudo setfacl -m user:${USER}:rw /var/run/docker.sock
+
 
 
 echo "Running Hello World Program"
