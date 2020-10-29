@@ -9,7 +9,7 @@
 ## Quick Install
 
 
-	- wget https://raw.githubusercontent.com/vikiworks-io/install_docker_engine_on_ubuntu/master/scripts/install_docker_engine.sh; chmod 777 install_docker_engine.sh; ./install_docker_engine.sh
+	wget https://raw.githubusercontent.com/vikiworks-io/install_docker_engine_on_ubuntu/master/scripts/install_docker_engine.sh; chmod 777 install_docker_engine.sh; ./install_docker_engine.sh
 
 
 
