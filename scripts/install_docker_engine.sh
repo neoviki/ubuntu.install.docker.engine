@@ -4,6 +4,13 @@
 
 sudo apt-get update -y
 
+echo "Uninstall old version"
+
+sudo apt-get -y purge docker-ce docker-ce-cli containerd.io
+
+sudo rm -rf /var/lib/docker
+
+
 echo "Installing Dependencies"
 sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
 
@@ -23,6 +30,11 @@ sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 
 #sudo apt-get install docker-ce=<VERSION_STRING> docker-ce-cli=<VERSION_STRING> containerd.io
 #<VERSION_STRING> looks like this -> 5:18.09.1~3-0~ubuntu-xenial.
+
+
+sudo chmod 666 /var/run/docker.sock
+
+sudo systemctl restart docker
 
 echo "Running Hello World Program"
 
