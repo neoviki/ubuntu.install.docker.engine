@@ -36,8 +36,11 @@ sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 #<VERSION_STRING> looks like this -> 5:18.09.1~3-0~ubuntu-xenial.
 
 sudo groupadd docker &> /dev/null
-sudo usermod -aG docker $USER
-newgrp docker 
+sudo usermod -aG docker $USER 
+
+newgrp docker &
+
+sleep 5
 
 #sudo systemctl restart docker
 sudo systemctl stop docker.service
@@ -51,7 +54,7 @@ sudo systemctl enable docker.service
 
 echo "Running Hello World Program"
 
-docker run hello-world
+docker run hello-world &> /dev/null 
 
 
 if [ $? -eq 0 ]; then
@@ -59,3 +62,4 @@ if [ $? -eq 0 ]; then
 else
     echo "[ ERROR ] Docker Installation"
 fi
+
