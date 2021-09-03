@@ -1,19 +1,97 @@
-#Install Docker Engine On Ubuntu
-#Reference: https://docs.docker.com/engine/install/ubuntu/
+########## COMMON_CODE_BEGIN()   ########
+CMD=""
+CLEAN=0
+
+ARG0=$0
+ARG1=$1
+ARG2=$2
+ARG3=$3
+
+os_support_check(){
+    OS_SUPPORTED=0
+
+    #Check Ubuntu 18.04 Support    
+    cat /etc/lsb-release | grep 18.04 2> /dev/null 1> /dev/null
+    if [ $? -eq 0 ]; then
+        OS_SUPPORTED=1
+    fi
+
+    #Check Ubuntu 16.04 Support    
+    cat /etc/lsb-release | grep 18.04 2> /dev/null 1> /dev/null
+    if [ $? -eq 0 ]; then
+        OS_SUPPORTED=1
+    fi
+
+    if [ $OS_SUPPORTED -eq 0 ]; then
+	echo
+	echo "Utility is not supported in this version of linux"
+	echo
+	exit 1
+    fi
+
+}
+
+
+get_command(){
+    if [ "$ARG0" == "sudo" ]; then
+        CMD="$ARG1"
+    else
+        CMD="$ARG0"
+    fi
+
+    if [ "$ARG1" = "clean" ]; then
+	CLEAN=1
+    fi
+
+    if [ "$ARG2" = "clean" ]; then
+	CLEAN=1
+    fi
+
+    if [ "$ARG3" = "clean" ]; then
+	CLEAN=1
+    fi
+
+}
 
 check_permission(){
     touch /bin/test.txt 2> /dev/null 1>/dev/null
 
     if [ $? -ne 0 ]; then
-	echo "permission error, try to run  this script wih sudo option"; 
+	echo "permission error, try to run this script wih sudo option"; 
 	echo ""
-	echo "Example: sudo $0"
+	echo "Example: sudo $CMD"
 	echo ""
 	exit 1; 
     fi 
     
     rm /bin/test.txt
 }
+
+check_utility(){
+	which $1 2> /dev/null  1> /dev/null
+	if [ $? -eq 0 ]; then
+		echo
+		echo "[ status ] $1 already installed"
+		echo ""
+		echo "For clean install try,"
+		echo
+		echo "$CMD clean"
+		echo
+		echo "(or)"
+		echo
+	        echo "sudo $CMD clean"
+		echo ""
+		exit 0
+	fi
+}
+
+init_bash_installer(){
+    os_support_check
+    get_command
+    check_permission
+}
+########## COMMON_CODE_END()   ########
+
 
 update_repo(){
     	apt-get update -y
@@ -23,10 +101,18 @@ update_repo(){
     	apt-get update -y
 }
 
+stop_docker_engine(){
+	systemctl stop docker.service 2>/dev/null 1>/dev/null
+	sleep 5
+}
+
 clean_old_docker(){
-	echo "Uninstall old version"
-	apt-get -y purge docker-ce docker-ce-cli containerd.io
-	rm -rf /var/lib/docker
+    	if [ $CLEAN -eq 1 ]; then
+		stop_docker_engine
+		echo "Uninstall old version"
+		apt-get -y purge docker-ce docker-ce-cli containerd.io
+		rm -rf /var/lib/docker
+	fi
 }
 
 
@@ -50,7 +136,29 @@ install_docker_engine_dependencies(){
 install_docker_engine(){
 	echo "Installing Docker Engine"
 	apt-get update -y
-	apt-get install -y docker-ce docker-ce-cli containerd.io
+
+	FLAG=0
+	for i in 1 2 3 4 5
+	do
+	    apt-get install -y docker-ce
+	    if [ $? -eq 0 ]; then
+		FLAG=1
+	        break
+	    fi
+	    dpkg --configure -a
+	    apt-get install -y -f  docker-ce
+	    if [ $? -eq 0 ]; then
+		FLAG=1
+	        break
+	    fi
+
+        done
+
+	[ $FLAG -eq 0 ] && { echo "error line ( ${LINENO} )"; exit 1; }
+	
+	apt-get install -y docker-ce-cli
+	[ $? -ne 0 ] && { echo "error line ( ${LINENO} )"; exit 1; }
+	apt-get install -y containerd.io
 	[ $? -ne 0 ] && { echo "error line ( ${LINENO} )"; exit 1; }
 }
 
@@ -74,13 +182,22 @@ set_docker_engine_permission(){
 
 enable_docker_engine(){
 	#sudo systemctl restart docker
-	systemctl stop docker.service
-	systemctl start docker.service
-	systemctl enable docker.service
+	for i in 1 2 3 4 5
+	do
+	    systemctl stop docker.service 
+	    sleep 1
+	    systemctl start docker.service
+	    sleep 1
+	    systemctl enable docker.service
+	    if [ $? -eq 0 ]; then
+		break
+	    fi
+	    sleep 1
+	done
 	#sudo chmod 666 /var/run/docker.sock
 	#sudo setfacl -m user:${USER}:rw /var/run/docker.sock
+	
 }
-
 
 verify_docker_engine_installation(){
 	echo "Running Hello World Program"
@@ -94,12 +211,10 @@ verify_docker_engine_installation(){
 	fi
 }
 
-check_permission
+init_bash_installer
 
-if [ "$1" = "clean" || "$2" = "clean" || "$3" = "clean" ]; then
-    clean_old_docker
-fi
-
+clean_old_docker
+check_utility "docker"
 update_repo
 install_docker_engine_dependencies
 install_docker_engine
